@@ -2,41 +2,65 @@ package org.softfriascorporations;
 
 
 import java.io.*;
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.*;
-import java.security.DigestInputStream;
-import java.security.MessageDigest;
+
+import javax.swing.*;
+import java.awt.*;
 
 
 public class Main {
 
     static final String VERSION_LOCAL = "1.0.0";
+    static final String URL_VERSION = "https://raw.githubusercontent.com/Tranquilino28/AppAutoUpdate/refs/tags/v1.1.0/MiApp.txt";
+    static final String URL_APP = "https://github.com/Tranquilino28/AppAutoUpdate/releases/download/v1.1.0/DemoUpdate.jar";
 
-    // 🔹 URL donde guardaste version.txt en GitHub
-    static final String URL_VERSION = "https://github.com/Tranquilino28/AppAutoUpdate/blob/800df050489b08aedfb1a93ec340dd5d2aa09476/MiApp.txt";
-
-    // 🔹 URL del último release de tu app (el JAR)
-    static final String URL_APP = "https://github.com/Tranquilino28/AppAutoUpdate/blob/800df050489b08aedfb1a93ec340dd5d2aa09476/DemoUpdate.jar";
+    // Referencia al área de texto del JFrame
+    private static JTextArea logArea;
 
     public static void main(String[] args) {
+        SwingUtilities.invokeLater(Main::crearVentana);
+        new Thread(Main::iniciarProceso).start(); // ejecuta la lógica sin bloquear el GUI
+    }
+
+    private static void crearVentana() {
+        JFrame frame = new JFrame("Actualizador de MiApp");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(500, 350);
+        frame.setLocationRelativeTo(null);
+
+        logArea = new JTextArea();
+        logArea.setEditable(false);
+        logArea.setFont(new Font("Consolas", Font.PLAIN, 14));
+
+        JScrollPane scroll = new JScrollPane(logArea);
+        frame.add(scroll);
+
+        frame.setVisible(true);
+        agregarLog("Iniciando verificación de actualizaciones...\n");
+    }
+
+    private static void iniciarProceso() {
         try {
-            System.out.println("Versión local: " + VERSION_LOCAL);
+            agregarLog("Versión local: " + VERSION_LOCAL);
 
             String versionRemota = obtenerVersionRemota();
-            System.out.println("Versión remota: " + versionRemota);
+            agregarLog("Versión remota: " + versionRemota);
 
             if (!VERSION_LOCAL.equals(versionRemota)) {
-                System.out.println("Nueva versión disponible. Descargando actualización...");
+                agregarLog("Nueva versión disponible.\nDescargando actualización...");
                 descargarActualizacion();
+                agregarLog("Descarga completada.");
+                agregarLog("Reiniciando aplicación...");
                 reiniciarApp();
             } else {
-                System.out.println("App actualizada. Ejecutando...");
-                // Aquí va el resto del código de tu app
+                agregarLog("La aplicación ya está actualizada.");
+                agregarLog("Ejecutando la app normalmente...");
+                ejecutarApp();
             }
 
         } catch (Exception e) {
-            System.err.println("Error al actualizar: " + e.getMessage());
+            agregarLog("❌ Error: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -48,11 +72,9 @@ public class Main {
         }
     }
 
-
     private static void descargarActualizacion() throws IOException {
         URL url = new URL(URL_APP);
         Path destino = Paths.get("MiApp_nueva.jar");
-
 
         try (InputStream in = url.openStream();
              OutputStream out = Files.newOutputStream(destino, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
@@ -63,14 +85,23 @@ public class Main {
                 out.write(buffer, 0, bytesLeidos);
             }
         }
-
-        System.out.println("Descarga completada → " + destino.toAbsolutePath());
     }
 
     private static void reiniciarApp() throws IOException {
-        // Lanza el nuevo jar y cierra el actual
         Runtime.getRuntime().exec("java -jar MiApp_nueva.jar");
-        System.out.println("Reiniciando aplicación...");
+        agregarLog("Reinicio completado, cerrando actualizador...");
         System.exit(0);
+    }
+
+    private static void ejecutarApp() {
+        agregarLog("Aquí puedes lanzar tu JFrame principal real...");
+        // Ejemplo: new VentanaPrincipal().setVisible(true);
+    }
+
+    private static void agregarLog(String texto) {
+        SwingUtilities.invokeLater(() -> {
+            logArea.append(texto + "\n");
+            logArea.setCaretPosition(logArea.getDocument().getLength());
+        });
     }
 }
