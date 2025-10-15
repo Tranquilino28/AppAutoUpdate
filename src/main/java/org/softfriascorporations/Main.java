@@ -48,6 +48,7 @@ public class Main {
         }
     }
 
+
     private static void descargarActualizacion() throws IOException {
         URL url = new URL(URL_APP);
         Path destino = Paths.get("MiApp_nueva.jar");
