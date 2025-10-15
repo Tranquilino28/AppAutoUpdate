@@ -14,10 +14,10 @@ public class Main {
     static final String VERSION_LOCAL = "1.0.0";
 
     // 🔹 URL donde guardaste version.txt en GitHub
-    static final String URL_VERSION = "https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/version.txt";
+    static final String URL_VERSION = "https://github.com/Tranquilino28/AppAutoUpdate/blob/800df050489b08aedfb1a93ec340dd5d2aa09476/MiApp.txt";
 
     // 🔹 URL del último release de tu app (el JAR)
-    static final String URL_APP = "https://github.com/TU_USUARIO/TU_REPO/releases/latest/download/MiApp.jar";
+    static final String URL_APP = "https://github.com/Tranquilino28/AppAutoUpdate/blob/800df050489b08aedfb1a93ec340dd5d2aa09476/DemoUpdate.jar";
 
     public static void main(String[] args) {
         try {
@@ -51,6 +51,7 @@ public class Main {
     private static void descargarActualizacion() throws IOException {
         URL url = new URL(URL_APP);
         Path destino = Paths.get("MiApp_nueva.jar");
+
 
         try (InputStream in = url.openStream();
              OutputStream out = Files.newOutputStream(destino, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
