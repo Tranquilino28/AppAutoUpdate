@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="DemoUpdate:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/DemoUpdate_jar</output-path>
+    <root id="archive" name="DemoUpdate.jar">
+      <element id="module-output" name="DemoUpdate" />
+    </root>
+  </artifact>
+</component>
