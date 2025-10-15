@@ -9,75 +9,73 @@ import javax.swing.*;
 import java.awt.*;
 
 
-public class Main {
 
-    static final String VERSION_LOCAL = "1.0.0";
-    static final String URL_VERSION = "https://raw.githubusercontent.com/Tranquilino28/AppAutoUpdate/refs/tags/v1.1.0/MiApp.txt";
-    static final String URL_APP = "https://github.com/Tranquilino28/AppAutoUpdate/releases/download/v1.1.0/DemoUpdate.jar";
+public class Main extends JFrame {
 
-    // Referencia al área de texto del JFrame
-    private static JTextArea logArea;
+    private static final String VERSION_LOCAL = "1.0.0";
+    private static final String URL_VERSION = "https://raw.githubusercontent.com/Tranquilino28/AppAutoUpdate/refs/heads/master/MiApp.txt";
+    private static final String URL_APP = "https://github.com/Tranquilino28/AppAutoUpdate/releases/download/v1.1.0/DemoUpdate.jar";
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(Main::crearVentana);
-        new Thread(Main::iniciarProceso).start(); // ejecuta la lógica sin bloquear el GUI
+    private final JTextArea statusArea;
+
+    public Main() {
+        super("Actualizador de MiApp");
+        setSize(500, 300);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
+
+        statusArea = new JTextArea();
+        statusArea.setEditable(false);
+        add(new JScrollPane(statusArea), BorderLayout.CENTER);
+
+        setVisible(true);
+
+        // Ejecuta la verificación en otro hilo para no congelar la UI
+        new Thread(this::iniciarProceso).start();
     }
 
-    private static void crearVentana() {
-        JFrame frame = new JFrame("Actualizador de MiApp");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(500, 350);
-        frame.setLocationRelativeTo(null);
-
-        logArea = new JTextArea();
-        logArea.setEditable(false);
-        logArea.setFont(new Font("Consolas", Font.PLAIN, 14));
-
-        JScrollPane scroll = new JScrollPane(logArea);
-        frame.add(scroll);
-
-        frame.setVisible(true);
-        agregarLog("Iniciando verificación de actualizaciones...\n");
+    private void log(String mensaje) {
+        SwingUtilities.invokeLater(() -> statusArea.append(mensaje + "\n"));
     }
 
-    private static void iniciarProceso() {
+    private void iniciarProceso() {
         try {
-            agregarLog("Versión local: " + VERSION_LOCAL);
-
+            log("Versión local: " + VERSION_LOCAL);
             String versionRemota = obtenerVersionRemota();
-            agregarLog("Versión remota: " + versionRemota);
+            log("Versión remota: " + versionRemota);
 
             if (!VERSION_LOCAL.equals(versionRemota)) {
-                agregarLog("Nueva versión disponible.\nDescargando actualización...");
+                log("Nueva versión disponible. Descargando...");
                 descargarActualizacion();
-                agregarLog("Descarga completada.");
-                agregarLog("Reiniciando aplicación...");
+                log("Descarga completada. Reiniciando aplicación...");
                 reiniciarApp();
             } else {
-                agregarLog("La aplicación ya está actualizada.");
-                agregarLog("Ejecutando la app normalmente...");
+                log("Aplicación actualizada. Ejecutando...");
                 ejecutarApp();
             }
-
         } catch (Exception e) {
-            agregarLog("❌ Error: " + e.getMessage());
+            log("Error al actualizar: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
-    private static String obtenerVersionRemota() throws IOException {
+    private String obtenerVersionRemota() throws IOException {
         URL url = new URL(URL_VERSION);
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()))) {
             return reader.readLine().trim();
         }
     }
 
-    private static void descargarActualizacion() throws IOException {
+    private void descargarActualizacion() throws IOException {
         URL url = new URL(URL_APP);
-        Path destino = Paths.get("MiApp_nueva.jar");
+        Path destinoTemp = Paths.get("MiApp_temp.jar");
+        Path destinoFinal = Paths.get("MiApp.jar");
+
+        log("Descargando nueva versión...");
 
         try (InputStream in = url.openStream();
-             OutputStream out = Files.newOutputStream(destino, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+             OutputStream out = Files.newOutputStream(destinoTemp, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
 
             byte[] buffer = new byte[8192];
             int bytesLeidos;
@@ -85,23 +83,25 @@ public class Main {
                 out.write(buffer, 0, bytesLeidos);
             }
         }
+
+        log("Reemplazando versión antigua...");
+        Files.move(destinoTemp, destinoFinal, StandardCopyOption.REPLACE_EXISTING);
+
+        log("Actualización completada correctamente.");
     }
 
-    private static void reiniciarApp() throws IOException {
-        Runtime.getRuntime().exec("java -jar MiApp_nueva.jar");
-        agregarLog("Reinicio completado, cerrando actualizador...");
+    private void reiniciarApp() throws IOException {
+        log("Reiniciando aplicación...");
+        String comando = "java -jar MiApp.jar";
+        Runtime.getRuntime().exec(comando);
         System.exit(0);
     }
 
-    private static void ejecutarApp() {
-        agregarLog("Aquí puedes lanzar tu JFrame principal real...");
-        // Ejemplo: new VentanaPrincipal().setVisible(true);
+    private void ejecutarApp() {
+        log("Aquí iría tu aplicación principal (abrir menú, login, etc.)");
     }
 
-    private static void agregarLog(String texto) {
-        SwingUtilities.invokeLater(() -> {
-            logArea.append(texto + "\n");
-            logArea.setCaretPosition(logArea.getDocument().getLength());
-        });
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(Main::new);
     }
 }
